@@ -1,0 +1,21 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create_dragons_plus"
+    }
+  ],
+  "type": "create_dragons_plus:coloring",
+  "color": "minecraft:cyan",
+  "ingredients": [
+    {
+      "tag": "minecraft:banners"
+    }
+  ],
+  "results": [
+    {
+      "count": 1,
+      "id": "minecraft:cyan_banner"
+    }
+  ]
+}

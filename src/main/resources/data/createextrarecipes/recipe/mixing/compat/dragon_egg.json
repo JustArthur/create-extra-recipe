@@ -1,22 +1,23 @@
 {
   "neoforge:conditions": [
     {
-      "type": "neoforge:not",
-      "value": {
-        "type": "neoforge:mod_loaded",
-        "modid": "create_dragons_plus"
-      }
+      "type": "neoforge:mod_loaded",
+      "modid": "create_dragons_plus"
     }
   ],
   "type": "create:mixing",
   "heat_requirement": "superheated",
   "ingredients": [
+    {
+      "type": "neoforge:single",
+      "amount": 1000,
+      "fluid": "create_dragons_plus:dragon_breath"
+    },
     {"item": "minecraft:obsidian"},
     {"item": "minecraft:obsidian"},
     {"item": "minecraft:obsidian"},
     {"item": "minecraft:obsidian"},
-    {"item": "minecraft:egg"},
-    {"item": "minecraft:dragon_breath"}
+    {"item": "minecraft:egg"}
   ],
   "results": [
     {

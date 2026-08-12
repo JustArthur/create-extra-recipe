@@ -1,6 +1,8 @@
 package net.kuma.create_extra_recipes;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.core.HolderLookup;
@@ -14,6 +16,7 @@ import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
 import net.minecraft.world.item.crafting.BlastingRecipe;
 import net.minecraft.world.item.crafting.CookingBookCategory;
@@ -23,7 +26,9 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
+import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.neoforge.common.DataMapHooks;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.TagsUpdatedEvent;
 
@@ -468,6 +473,115 @@ public class RecipeOverrides {
         return pairs;
     }
 
+    // --- Mechanism 5: dynamic copper oxidation filling recipe generation ------------------
+
+    private static final ResourceLocation FILLING_RECIPE_TYPE_ID = ResourceLocation.fromNamespaceAndPath("create", "filling");
+    private static final int COPPER_OXIDATION_WATER_AMOUNT = 250;
+
+    /**
+     * Scans NeoForge's OXIDIZABLES data map - the same registry-driven mechanism the game uses
+     * to drive natural weathering and axe scraping, which any mod can add entries to - for
+     * every (block, next block) pair (read here via DataMapHooks.INVERSE_OXIDIZABLES_DATAMAP,
+     * which already merges the data map with vanilla's legacy static map as a fallback), and
+     * generates a create:filling recipe (250mB water) turning one stage's item into the next's.
+     * No per-mod/per-family list to maintain: a new mod's copper block registered into this
+     * data map is covered automatically, and the vanilla quirks that don't follow simple name
+     * patterns (e.g. copper_block -> exposed_copper) are already resolved correctly because
+     * they come from the game's own registered mapping rather than a name guess.
+     * Blocks with no BlockItem (asItem() == AIR) are skipped, as are pairs that already have a
+     * create:filling recipe (existingFillingPairs), so a mod shipping its own recipe is never
+     * duplicated.
+     */
+    private static List<RecipeHolder<?>> findCopperOxidationCandidates(
+            HolderLookup.Provider registries, Set<ItemPair> existingFillingPairs) {
+        List<RecipeHolder<?>> candidates = new ArrayList<>();
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries);
+
+        for (Map.Entry<Block, Block> entry : DataMapHooks.INVERSE_OXIDIZABLES_DATAMAP.entrySet()) {
+            // entry is (afterStage -> beforeStage): the recipe goes the other way, before -> after
+            Item fromItem = entry.getValue().asItem();
+            Item toItem = entry.getKey().asItem();
+            if (fromItem == Items.AIR || toItem == Items.AIR) {
+                continue;
+            }
+            if (existingFillingPairs.contains(new ItemPair(fromItem, toItem))) {
+                continue;
+            }
+
+            ResourceLocation fromId = BuiltInRegistries.ITEM.getKey(fromItem);
+            ResourceLocation toId = BuiltInRegistries.ITEM.getKey(toItem);
+            ResourceLocation recipeId = ResourceLocation.fromNamespaceAndPath(OVERRIDE_NAMESPACE,
+                    "copper_oxidation/" + fromId.getNamespace() + "_" + fromId.getPath());
+
+            JsonObject json = buildFillingRecipeJson(fromId, toId);
+            try {
+                Recipe<?> recipe = Recipe.CODEC.parse(ops, json).getOrThrow(IllegalStateException::new);
+                candidates.add(new RecipeHolder<>(recipeId, recipe));
+            } catch (RuntimeException e) {
+                Create_extra_recipes.LOGGER.error("Failed to build copper oxidation filling recipe {} -> {}", fromId, toId, e);
+            }
+        }
+
+        return candidates;
+    }
+
+    private static JsonObject buildFillingRecipeJson(ResourceLocation ingredientItemId, ResourceLocation resultItemId) {
+        JsonObject json = new JsonObject();
+        json.addProperty("type", "create:filling");
+
+        JsonArray ingredients = new JsonArray();
+        JsonObject itemIngredient = new JsonObject();
+        itemIngredient.addProperty("item", ingredientItemId.toString());
+        ingredients.add(itemIngredient);
+
+        JsonObject fluidIngredient = new JsonObject();
+        fluidIngredient.addProperty("type", "neoforge:single");
+        fluidIngredient.addProperty("amount", COPPER_OXIDATION_WATER_AMOUNT);
+        fluidIngredient.addProperty("fluid", "minecraft:water");
+        ingredients.add(fluidIngredient);
+
+        json.add("ingredients", ingredients);
+
+        JsonArray results = new JsonArray();
+        JsonObject result = new JsonObject();
+        result.addProperty("id", resultItemId.toString());
+        results.add(result);
+        json.add("results", results);
+
+        return json;
+    }
+
+    /**
+     * Indexes every currently-loaded create:filling recipe by its (single-item ingredient,
+     * result item) pair, so findCopperOxidationCandidates can skip generating a duplicate when
+     * a mod already ships its own filling recipe for that pair. Identified by recipe type id
+     * rather than an instanceof check, so this never needs a compile-time dependency on
+     * Create's internal recipe class.
+     */
+    private static Set<ItemPair> indexExistingFillingPairs(RecipeManager recipeManager, HolderLookup.Provider registries) {
+        Set<ItemPair> pairs = new HashSet<>();
+        for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+            Recipe<?> recipe = holder.value();
+            if (!FILLING_RECIPE_TYPE_ID.equals(BuiltInRegistries.RECIPE_TYPE.getKey(recipe.getType()))) {
+                continue;
+            }
+            NonNullList<Ingredient> ingredients = recipe.getIngredients();
+            if (ingredients.size() != 1) {
+                continue;
+            }
+            ItemStack[] items = ingredients.get(0).getItems();
+            if (items.length != 1) {
+                continue;
+            }
+            ItemStack result = recipe.getResultItem(registries);
+            if (result.isEmpty()) {
+                continue;
+            }
+            pairs.add(new ItemPair(items[0].getItem(), result.getItem()));
+        }
+        return pairs;
+    }
+
     // --- Merge & apply ---------------------------------------------------------------------
 
     private static void applyOverrides(RecipeManager recipeManager, HolderLookup.Provider registries, List<RecipeHolder<?>> staticOverrides) {
@@ -512,14 +626,23 @@ public class RecipeOverrides {
                     "Generated raw ore block blasting recipe: {} -> {}", candidate.rawBlockId(), candidate.metalBlockId());
         }
 
-        if (nerfedCount == 0 && buffedCount == 0 && staticOverrides.isEmpty() && rawBlockCandidates.isEmpty()) {
+        Set<ItemPair> existingFillingPairs = indexExistingFillingPairs(recipeManager, registries);
+        List<RecipeHolder<?>> copperOxidationCandidates = findCopperOxidationCandidates(registries, existingFillingPairs);
+        for (RecipeHolder<?> candidate : copperOxidationCandidates) {
+            merged.add(candidate);
+            Create_extra_recipes.LOGGER.info("Generated copper oxidation filling recipe: {}", candidate.id());
+        }
+
+        if (nerfedCount == 0 && buffedCount == 0 && staticOverrides.isEmpty()
+                && rawBlockCandidates.isEmpty() && copperOxidationCandidates.isEmpty()) {
             return;
         }
 
         recipeManager.replaceRecipes(merged);
         Create_extra_recipes.LOGGER.info(
                 "create_extra_recipes: applied {} static recipe override(s), {} dynamically-detected trim template nerf(s), "
-                        + "{} dynamically-detected log-to-wood buff(s), and {} dynamically-generated raw ore block blasting recipe(s)",
-                staticOverrides.size(), nerfedCount, buffedCount, rawBlockCandidates.size());
+                        + "{} dynamically-detected log-to-wood buff(s), {} dynamically-generated raw ore block blasting recipe(s), "
+                        + "and {} dynamically-generated copper oxidation filling recipe(s)",
+                staticOverrides.size(), nerfedCount, buffedCount, rawBlockCandidates.size(), copperOxidationCandidates.size());
     }
 }

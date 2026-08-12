@@ -1,0 +1,19 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"tag": "createextrarecipes:purpur_blocks"}],
+  "processing_time": 450,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:popped_chorus_fruit"
+    },
+    {
+      "chance": 0.75,
+      "id": "minecraft:popped_chorus_fruit"
+    },
+    {
+      "chance": 0.05,
+      "id": "minecraft:shulker_shell"
+    }
+  ]
+}

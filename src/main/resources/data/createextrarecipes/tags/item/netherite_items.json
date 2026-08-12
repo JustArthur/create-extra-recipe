@@ -1,6 +1,6 @@
 {
   "values": [
-    "createextrarecipes:armors/netherite_armor",
-    "createextrarecipes:tools/netherite_tools"
+    "#createextrarecipes:armors/netherite_armor",
+    "#createextrarecipes:tools/netherite_tools"
   ]
 }

@@ -2,7 +2,7 @@
   "type": "create:splashing",
   "ingredients": [
     {
-      "tag": "minecraft:shulker_boxes"
+      "tag": "c:shulker_boxes"
     }
   ],
   "results": [
