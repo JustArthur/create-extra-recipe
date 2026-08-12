@@ -1,0 +1,21 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create_dragons_plus"
+    }
+  ],
+  "type": "create_dragons_plus:coloring",
+  "color": "minecraft:yellow",
+  "ingredients": [
+    {
+      "tag": "minecraft:shulker_boxes"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:yellow_shulker_box",
+      "count": 1
+    }
+  ]
+}

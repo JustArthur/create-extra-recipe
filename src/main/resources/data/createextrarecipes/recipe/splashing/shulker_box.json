@@ -1,0 +1,13 @@
+{
+  "type": "create:splashing",
+  "ingredients": [
+    {
+      "tag": "minecraft:shulker_boxes"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:shulker_box"
+    }
+  ]
+}

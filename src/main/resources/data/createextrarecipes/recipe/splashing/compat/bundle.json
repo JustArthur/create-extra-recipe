@@ -6,7 +6,11 @@
     }
   ],
   "type": "create:splashing",
-  "ingredients": [{"tag": "createextrarecipes:compat/colored_bundles"}],
+  "ingredients": [
+    {
+      "tag": "minecraft:bunldes"
+    }
+  ],
   "results": [
     {
       "id": "minecraft:bundle"

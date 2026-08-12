@@ -1,0 +1,21 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "create_dragons_plus"
+    }
+  ],
+  "type": "create_dragons_plus:coloring",
+  "color": "minecraft:white",
+  "ingredients": [
+    {
+      "tag": "create:toolboxes"
+    }
+  ],
+  "results": [
+    {
+      "id": "create:white_toolbox",
+      "count": 1
+    }
+  ]
+}
