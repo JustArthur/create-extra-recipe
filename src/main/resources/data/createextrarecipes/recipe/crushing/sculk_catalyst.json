@@ -1,0 +1,23 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"item": "minecraft:sculk_catalyst"}],
+  "processing_time": 350,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:bone"
+    },
+    {
+      "chance": 0.75,
+      "id": "minecraft:bone"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:echo_shard"
+    },
+    {
+      "chance": 0.001,
+      "id": "minecraft:skeleton_skull"
+    }
+  ]
+}

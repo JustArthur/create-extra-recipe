@@ -1,0 +1,9 @@
+{
+  "type": "create:haunting",
+  "ingredients": [{"item": "minecraft:blackstone"}],
+  "results": [
+    {
+      "id": "minecraft:basalt"
+    }
+  ]
+}

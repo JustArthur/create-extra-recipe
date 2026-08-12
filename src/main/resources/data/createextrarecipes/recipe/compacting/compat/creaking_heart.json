@@ -1,0 +1,20 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:compacting",
+  "ingredients": [
+    {"item": "minecraft:pale_oak_log"},
+    {"item": "minecraft:pale_oak_log"},
+    {"item": "minecraft:resin_block"}
+  ],
+  "results": [
+    {
+      "count": 1,
+      "id": "minecraft:creaking_heart"
+    }
+  ]
+}

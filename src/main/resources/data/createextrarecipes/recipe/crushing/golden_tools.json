@@ -1,0 +1,23 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"tag": "createextrarecipes:tools/golden_tools"}],
+  "processing_time": 450,
+  "results": [
+    {
+      "id": "minecraft:gold_ingot"
+    },
+    {
+      "chance": 0.50,
+      "id": "minecraft:stick"
+    },
+    {
+      "count": 3,
+      "chance": 0.25,
+      "id": "minecraft:gold_nugget"
+    },
+    {
+      "chance": 0.1,
+      "id": "minecraft:gold_ingot"
+    }
+  ]
+}

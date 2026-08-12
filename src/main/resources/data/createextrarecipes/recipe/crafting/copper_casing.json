@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {"item": "minecraft:copper_ingot"},
+    {"tag": "c:stripped_logs"}
+  ],
+  "result": {
+    "count": 1,
+    "id": "create:copper_casing"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "create:haunting",
+  "ingredients": [{"item": "minecraft:basalt"}],
+  "results": [
+    {
+      "id": "minecraft:netherrack"
+    }
+  ]
+}

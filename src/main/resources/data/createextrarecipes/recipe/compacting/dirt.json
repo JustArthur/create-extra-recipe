@@ -1,0 +1,14 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {"item": "minecraft:flint"},
+    {"item": "minecraft:flint"},
+    {"item": "minecraft:flint"},
+    {"item": "minecraft:flint"}
+  ],
+  "results": [
+    {
+      "id": "minecraft:dirt"
+    }
+  ]
+}

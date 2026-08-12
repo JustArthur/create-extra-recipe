@@ -1,0 +1,19 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {"item": "minecraft:cobblestone"},
+    {"item": "minecraft:cobblestone"},
+    {"item": "minecraft:cobblestone"},
+    {"item": "minecraft:cobblestone"},
+    {
+      "type": "neoforge:single",
+      "amount": 500,
+      "fluid": "minecraft:water"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:tuff"
+    }
+  ]
+}

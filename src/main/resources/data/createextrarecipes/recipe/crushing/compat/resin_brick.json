@@ -1,0 +1,21 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:crushing",
+  "ingredients":[
+    {
+      "item": "minecraft:resin_brick"
+    }
+  ],
+  "processing_time": 150,
+  "results": [
+    {
+      "chance": 0.75,
+      "id": "minecraft:resin_clump"
+    }
+  ]
+}

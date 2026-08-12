@@ -1,0 +1,26 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {"item": "minecraft:bone_block"},
+    {"item": "minecraft:echo_shard"},
+    {"item": "minecraft:echo_shard"},
+    {"item": "minecraft:echo_shard"},
+    {
+      "type": "neoforge:components",
+      "amount": 100,
+      "components": {
+        "create:potion_fluid_bottle_type": "regular",
+        "minecraft:potion_contents": {
+          "potion": "minecraft:weakness"
+        }
+      },
+      "fluids": "create:potion"
+    }
+  ],
+  "results": [
+    {
+      "chance": 0.75,
+      "id": "minecraft:sculk_catalyst"
+    }
+  ]
+}

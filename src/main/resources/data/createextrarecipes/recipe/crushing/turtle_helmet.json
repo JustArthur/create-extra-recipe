@@ -1,0 +1,15 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"item": "minecraft:turtle_helmet"}],
+  "processing_time": 250,
+  "results": [
+    {
+      "count": 3,
+      "id": "minecraft:turtle_scute"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:turtle_scute"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:compacting",
+  "ingredients": [
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:ghast_tear"},
+    {"item": "minecraft:soul_sand"}
+  ],
+  "results": [
+    {
+      "id": "minecraft:dried_ghast"
+    }
+  ]
+}

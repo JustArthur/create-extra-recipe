@@ -1,0 +1,20 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"item": "minecraft:blackstone"}],
+  "processing_time": 450,
+  "results": [
+    {
+      "chance": 0.75,
+      "count": 2,
+      "id": "minecraft:bone"
+    },
+    {
+      "chance": 0.1,
+      "id": "minecraft:bone"
+    },
+    {
+      "chance": 0.001,
+      "id": "minecraft:wither_skeleton_skull"
+    }
+  ]
+}

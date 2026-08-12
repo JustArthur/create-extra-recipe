@@ -1,0 +1,16 @@
+{
+	"type": "create:mixing",
+	"ingredients": [
+		{"item": "minecraft:charcoal"},
+		{"item": "minecraft:charcoal"},
+		{"item": "minecraft:charcoal"},
+		{"item": "create:cinder_flour"},
+		{"item": "minecraft:flint"}
+	],
+	"results": [
+		{
+			"count": 2,
+			"id": "minecraft:gunpowder"
+		}
+	]
+}

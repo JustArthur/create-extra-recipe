@@ -1,0 +1,10 @@
+{
+  "type": "create:haunting",
+  "ingredients": [{"tag": "minecraft:soul_fire_base_blocks"}],
+  "results": [
+    {
+      "chance": 0.08,
+      "id": "minecraft:ghast_tears"
+    }
+  ]
+}

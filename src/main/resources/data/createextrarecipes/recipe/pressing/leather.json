@@ -1,0 +1,9 @@
+{
+  "type": "create:pressing",
+  "ingredients": [{"item": "minecraft:rotten_flesh"}],
+  "results": [
+    {
+      "id": "minecraft:leather"
+    }
+  ]
+}

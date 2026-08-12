@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "A": {"item": "minecraft:amethyst_shard"},
+    "O": {"item": "minecraft:obsidian"}
+  },
+  "pattern": [
+    " A ",
+    "AOA",
+    " A "
+  ],
+  "result": {
+    "id": "minecraft:crying_obsidian",
+    "count": 1
+  }
+}

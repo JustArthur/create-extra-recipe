@@ -1,0 +1,25 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:crushing",
+  "ingredients":[
+    {
+      "item": "minecraft:creaking_heart"
+    }
+  ],
+  "processing_time": 250,
+  "results": [
+    {
+      "count": 3,
+      "id": "minecraft:resin_clump"
+    },
+    {
+      "chance": 0.75,
+      "id": "minecraft:resin_clump"
+    }
+  ]
+}

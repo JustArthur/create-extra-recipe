@@ -1,0 +1,15 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:splashing",
+  "ingredients": [{"tag": "createextrarecipes:compat/colored_bundles"}],
+  "results": [
+    {
+      "id": "minecraft:bundle"
+    }
+  ]
+}

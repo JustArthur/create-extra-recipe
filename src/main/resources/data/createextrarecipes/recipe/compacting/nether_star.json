@@ -1,0 +1,23 @@
+{
+  "type": "create:compacting",
+  "heat_requirement": "superheated",
+  "ingredients": [
+    {"item": "minecraft:soul_sand"},
+    {"item": "minecraft:soul_sand"},
+    {"item": "minecraft:soul_sand"},
+    {"item": "minecraft:soul_sand"},
+    {"item": "minecraft:wither_skeleton_skull"},
+    {"item": "minecraft:wither_skeleton_skull"},
+    {"item": "minecraft:wither_skeleton_skull"},
+    {
+      "type": "neoforge:single",
+      "amount": 1000,
+      "fluid": "minecraft:lava"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:nether_star"
+    }
+  ]
+}

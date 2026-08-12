@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "C": {"item": "minecraft:copper_ingot"},
+    "K": {"item": "minecraft:trial_key"},
+    "O": {"item": "minecraft:ominous_bottle"}
+  },
+  "pattern": [
+    "OKO",
+    " C ",
+    " C "
+  ],
+  "result": {
+    "id": "minecraft:ominous_trial_key",
+    "count": 1
+  }
+}

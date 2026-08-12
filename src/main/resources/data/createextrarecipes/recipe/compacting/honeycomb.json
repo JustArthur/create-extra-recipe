@@ -1,0 +1,17 @@
+{
+	"type": "create:compacting",
+	"ingredients": [
+		{"item": "minecraft:honeycomb_block"}
+	],
+	"results": [
+		{
+			"count": 3,
+			"id": "minecraft:honeycomb"
+		},
+		{
+			"chance": 0.1,
+			"count": 1,
+			"id": "minecraft:honeycomb"
+		}
+	]
+}

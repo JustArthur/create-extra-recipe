@@ -1,0 +1,9 @@
+{
+  "type": "create:haunting",
+  "ingredients": [{"item": "minecraft:skeleton_skull"}],
+  "results": [
+    {
+      "id": "minecraft:wither_skeleton_skull"
+    }
+  ]
+}

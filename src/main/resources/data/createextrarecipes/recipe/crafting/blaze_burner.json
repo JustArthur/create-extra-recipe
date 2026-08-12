@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "R": {"item":"minecraft:blaze_rod"},
+    "P": {"item":"minecraft:blaze_powder"},
+    "E": {"item":"create:empty_blaze_burner"}
+  },
+  "pattern": [
+    "RPR",
+    "PEP",
+    "RPR"
+  ],
+  "result": {
+    "count": 1,
+    "id": "create:blaze_burner"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"item": "minecraft:sculk"}],
+  "processing_time": 250,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:echo_shard"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:echo_shard"
+    },
+    {
+      "chance": 0.7,
+      "id": "create:experience_nugget"
+    }
+  ]
+}

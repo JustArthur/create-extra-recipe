@@ -1,0 +1,20 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"tag": "createextrarecipes:armors/iron_armor"}],
+  "processing_time": 450,
+  "results": [
+    {
+      "count": 3,
+      "id": "minecraft:iron_ingot"
+    },
+    {
+      "count": 5,
+      "chance": 0.25,
+      "id": "minecraft:iron_nugget"
+    },
+    {
+      "chance": 0.1,
+      "id": "minecraft:iron_ingot"
+    }
+  ]
+}

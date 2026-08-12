@@ -1,0 +1,23 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"tag": "minecraft:soul_fire_base_blocks"}],
+  "processing_time": 150,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:bone"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:bone"
+    },
+    {
+      "chance": 0.08,
+      "id": "minecraft:ghast_tear"
+    },
+    {
+      "chance": 0.001,
+      "id": "minecraft:skeleton_skull"
+    }
+  ]
+}

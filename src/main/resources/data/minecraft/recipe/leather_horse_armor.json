@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "I": {
+      "item": "minecraft:leather"
+    },
+    "L": {
+      "item": "minecraft:saddle"
+    }
+  },
+  "pattern": [
+    "  I",
+    "ILI",
+    "III"
+  ],
+  "result": {
+    "count": 1,
+    "id": "minecraft:leather_horse_armor"
+  }
+}

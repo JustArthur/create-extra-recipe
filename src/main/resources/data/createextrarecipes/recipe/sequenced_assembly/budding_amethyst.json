@@ -1,0 +1,79 @@
+{
+  "type": "create:sequenced_assembly",
+  "ingredient": {
+    "item": "minecraft:amethyst_block"
+  },
+  "loops": 1,
+  "results": [
+    {
+      "chance": 0.3,
+      "id": "minecraft:budding_amethyst"
+    },
+    {
+      "chance": 0.6,
+      "count": 3,
+      "id": "minecraft:amethyst_shard"
+    },
+    {
+      "chance": 0.1,
+      "id": "minecraft:diamond"
+    }
+  ],
+  "sequence": [
+    {
+      "type": "create:cutting",
+      "ingredients": [
+        {
+          "item": "minecraft:amethyst_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "minecraft:amethyst_block"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "minecraft:amethyst_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "minecraft:amethyst_block"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "minecraft:amethyst_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "minecraft:amethyst_block"
+        }
+      ]
+    },
+    {
+      "type": "create:pressing",
+      "ingredients": [
+        {
+          "item": "minecraft:amethyst_block"
+        }
+      ],
+      "results": [
+        {
+          "id": "minecraft:amethyst_block"
+        }
+      ]
+    }
+  ],
+  "transitional_item": {
+    "id": "minecraft:amethyst_block"
+  }
+}

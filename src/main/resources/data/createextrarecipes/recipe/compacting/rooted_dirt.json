@@ -1,0 +1,15 @@
+{
+  "type": "create:compacting",
+  "ingredients": [
+    {"item": "minecraft:dirt"},
+    {"item": "minecraft:dirt"},
+    {"item": "minecraft:bone_meal"},
+    {"item": "minecraft:bone_meal"}
+  ],
+  "results": [
+    {
+      "count": 4,
+      "id": "minecraft:rooted_dirt"
+    }
+  ]
+}
