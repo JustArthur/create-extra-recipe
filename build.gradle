@@ -10,6 +10,10 @@ group = mod_group_id
 
 repositories {
     mavenLocal()
+    maven {
+        // Cloth Config API (optional dependency, screen only - see Config/ClothConfigScreen)
+        url "https://maven.shedaniel.me/"
+    }
 }
 
 base {
@@ -116,6 +120,13 @@ dependencies {
     // For more info:
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+    // Cloth Config API - compile-time only. It's an OPTIONAL runtime dependency (see
+    // neoforge.mods.toml): the mod reads/writes its config through NeoForge's own ModConfigSpec
+    // regardless, and only uses Cloth Config to render a config screen when it's installed
+    // (see Create_extra_recipes/ClothConfigScreen). Not added as implementation/runtimeOnly so
+    // it never becomes a hard requirement for players who don't need the in-game screen.
+    compileOnly "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

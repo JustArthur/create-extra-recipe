@@ -25,6 +25,13 @@ license = "${mod_license}"
     ordering="AFTER"
     side="BOTH"
 
+[[dependencies.${mod_id}]]
+    modId="cloth_config"
+    type="optional"
+    versionRange="[15.0.140,)"
+    ordering="AFTER"
+    side="CLIENT"
+
 [[mods]]
     modId = "${mod_id}"
     version = "${mod_version}"

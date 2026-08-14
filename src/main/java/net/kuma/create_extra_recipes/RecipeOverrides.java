@@ -28,6 +28,7 @@ import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.DataMapHooks;
 import net.neoforged.neoforge.event.AddReloadListenerEvent;
 import net.neoforged.neoforge.event.TagsUpdatedEvent;
@@ -46,40 +47,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Two independent recipe-patching mechanisms, merged into a single replaceRecipes call:
- *
- * 1. STATIC: netherite_ingot and netherite_upgrade_smithing_template are re-read from
- *    data/create_extra_recipes/recipe_overrides/ and injected verbatim. They aren't picked
- *    up by mechanism 2 below (netherite_upgrade_smithing_template would otherwise match it
- *    too - it's explicitly excluded from the dynamic scan to avoid double-processing).
- *
- * 2. DYNAMIC (trim duplication): any minecraft:crafting_shaped recipe - vanilla, NeoForge's own
- *    retagged version, or a third-party mod's - that duplicates an armor trim smithing template
- *    is detected structurally (see isTrimDuplicationRecipe) and has its majority/minority
- *    ingredient slots swapped in memory, without needing to know the mod or ingredients
- *    ahead of time.
- *
- * 3. DYNAMIC (log-to-wood buff): any minecraft:crafting_shaped recipe that assembles 4 of a
- *    single minecraft:logs-tagged item into a 2x2 square yielding 3 of some result is detected
- *    structurally (see isLogToWoodRecipe) and has its result count bumped to 4, without needing
- *    to know the mod, the wood variant, or the result item's name ahead of time.
- *
- * 4. DYNAMIC (raw ore block blasting): unlike the previous two dynamic mechanisms, this one has
- *    no existing recipe to detect - it scans the item registry itself for "raw_<metal>_block"
- *    items (see findRawBlockToMetalBlockCandidates) that don't already have a smelting/blasting
- *    recipe to their "<metal>_block" counterpart, and generates one. Works for vanilla and any
- *    third-party mod's raw ore blocks without a per-mod/per-metal list.
- *
- * All are computed from a PreparableReloadListener added via AddReloadListenerEvent, so they
- * see every other pack's recipes (including NeoForge's own) already loaded - NeoForge's
- * resource pack loads after ours in the pack stacking order, so a plain datapack-level
- * override loses that race every time. However, the actual replaceRecipes() application is
- * deferred to TagsUpdatedEvent (see onTagsUpdated): item tags are not guaranteed bound yet
- * during that listener's apply() phase, so a tag-based ingredient (e.g. NeoForge's own
- * c:gems/diamond replacement for vanilla's netherite/diamond trim recipes) would still resolve
- * to a placeholder rather than its real contents if read too early.
- */
 public class RecipeOverrides {
 
     private static final String OVERRIDE_NAMESPACE = Create_extra_recipes.MODID;
@@ -91,8 +58,6 @@ public class RecipeOverrides {
             ResourceLocation.withDefaultNamespace("netherite_upgrade_smithing_template")
     );
 
-    // Set at the end of our reload listener's apply() phase, consumed by onTagsUpdated once
-    // tags are actually bound (see class javadoc point 2 below for why this hand-off exists).
     private volatile PendingApply pending;
 
     private record PendingApply(RecipeManager recipeManager, HolderLookup.Provider registries,
@@ -112,17 +77,6 @@ public class RecipeOverrides {
         );
     }
 
-    /**
-     * Item tags (including NeoForge's own c: tags, which several mods - and NeoForge itself,
-     * for some vanilla recipes - use instead of concrete items) are NOT guaranteed resolved
-     * yet during a PreparableReloadListener's apply() phase: MinecraftServer only calls
-     * ReloadableServerResources#updateRegistryTags() - which binds tags and fires this event -
-     * AFTER every reload listener (ours included) has finished. Reading Ingredient.getItems()
-     * on a tag-based ingredient before that point returns a single placeholder
-     * minecraft:barrier item rather than the tag's real, still-unbound contents. So the actual
-     * nerf work is deferred to here, where tags are guaranteed bound. CLIENT_PACKET_RECEIVED
-     * fires client-side on connect and isn't relevant to server-side recipe mutation.
-     */
     @SubscribeEvent
     public void onTagsUpdated(TagsUpdatedEvent event) {
         if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
@@ -165,17 +119,6 @@ public class RecipeOverrides {
     }
 
     // --- Mechanism 2: dynamic detection + in-memory nerf ---------------------------------
-
-    /**
-     * True only if ALL of: the recipe is a crafting_shaped recipe, its result item's id
-     * ends with "_armor_trim_smithing_template", AND one of its (non-empty, single-item)
-     * ingredient slots refers back to that same result item (the recipe duplicates itself).
-     * The item tag minecraft:trim_templates was considered as a detection signal instead,
-     * but at least one real mod (more_armor_trims) ships its tag addition under
-     * assets/minecraft/tags/item/trim_templates.json instead of data/, so it never loads -
-     * relying on it would silently miss that mod's templates. The self-reference check does
-     * not depend on any third party doing anything correctly.
-     */
     private static boolean isTrimDuplicationRecipe(ShapedRecipe recipe, ItemStack result) {
         ResourceLocation resultId = BuiltInRegistries.ITEM.getKey(result.getItem());
         if (!resultId.getPath().endsWith(TRIM_TEMPLATE_SUFFIX)) {
@@ -193,14 +136,6 @@ public class RecipeOverrides {
         return false;
     }
 
-    /**
-     * Swaps the ingredient assigned to the majority-count pattern slot (e.g. 7 cells, the
-     * expensive material under vanilla/NeoForge convention) with the one assigned to the
-     * minority-count slot (e.g. 1 cell), regardless of what those ingredients actually are.
-     * Returns empty (and logs a warning) if the recipe's shape isn't the standard "1 template
-     * slot + exactly 2 other distinct material ingredients with different counts" layout -
-     * we never guess on an unrecognized shape.
-     */
     private static Optional<ShapedRecipe> nerf(ResourceLocation id, ShapedRecipe recipe, ItemStack result) {
         ShapedRecipePattern pattern = recipe.pattern;
         NonNullList<Ingredient> ingredients = pattern.ingredients();
@@ -279,11 +214,6 @@ public class RecipeOverrides {
         return Optional.of(newRecipe);
     }
 
-    /**
-     * Resolves an ingredient (tag- or item-based) to the concrete items it currently matches
-     * and returns an item-only Ingredient built from those. A no-op for ingredients that were
-     * already item-based.
-     */
     private static Ingredient toConcreteIngredient(Ingredient ingredient) {
         ItemStack[] items = ingredient.getItems();
         return Ingredient.of(Arrays.stream(items));
@@ -291,18 +221,6 @@ public class RecipeOverrides {
 
     // --- Mechanism 3: dynamic log-to-wood buff detection ----------------------------------
 
-    /**
-     * True only if ALL of: the recipe is a crafting_shaped recipe, its pattern is exactly a
-     * 2x2 square ("##"/"##"), all 4 pattern cells resolve to the same single-item ingredient
-     * (no tags, no ingredient lists), that item belongs to minecraft:logs, and result.count
-     * is exactly 3 (the vanilla Wood/Stripped Wood ratio we're nerfing back up to 4).
-     * minecraft:logs was chosen over logs_that_burn: it's the broadest, most stable tag and
-     * already covers stripped variants and third-party tree mods that follow vanilla
-     * convention, without pulling in fuel-related semantics that aren't relevant here. No
-     * check is made on the result item's own id/name - the pattern+ingredient+count triplet
-     * is already a highly specific signal, and requiring a naming convention would reintroduce
-     * an assumption about how third-party mods name their result items.
-     */
     private static boolean isLogToWoodRecipe(ShapedRecipe recipe, ItemStack result) {
         if (result.getCount() != 3) {
             return false;
@@ -343,10 +261,6 @@ public class RecipeOverrides {
         return true;
     }
 
-    /**
-     * Rebuilds the recipe identically except for result.count, bumped from 3 to 4. Nothing
-     * else about the recipe (pattern, group, category, ingredients) is touched.
-     */
     private static ShapedRecipe buffWoodCount(ShapedRecipe recipe, ItemStack result) {
         ItemStack buffedResult = result.copy();
         buffedResult.setCount(4);
@@ -363,24 +277,6 @@ public class RecipeOverrides {
     private record RawBlockCandidate(ResourceLocation rawBlockId, Item rawBlockItem, ResourceLocation metalBlockId, Item metalBlockItem) {
     }
 
-    /**
-     * Scans the item registry for "<namespace>:raw_<metal>_block" items that also have a
-     * "<namespace>:<metal>_block" counterpart in the same namespace, and that aren't already
-     * covered by an existing smelting/blasting recipe (existingCookingPairs, built from the
-     * currently-loaded recipes so third-party recipes are respected and never duplicated).
-     *
-     * Preferred anchor is tag-based: the raw block belongs to some bound item tag whose path
-     * starts with "storage_blocks/raw_" (the NeoForge/Common Conventions family, e.g.
-     * c:storage_blocks/raw_copper) - mirrors how minecraft:logs anchors the wood mechanism.
-     * If no such tag is bound for that item (some third-party mods only follow the naming
-     * convention without tagging correctly), we fall back to the name pattern alone, but log a
-     * WARN so a nerf silently relying on unreliable third-party naming stays visible in logs.
-     *
-     * Reading BuiltInRegistries.ITEM itself does not depend on tag binding and could run as
-     * early as AddReloadListenerEvent - but getTagNames() per item does depend on tags being
-     * bound, so like mechanism 2/3's ingredient resolution, this whole scan is only run from
-     * onTagsUpdated (see that method's javadoc for why tags aren't safe before then).
-     */
     private static List<RawBlockCandidate> findRawBlockToMetalBlockCandidates(Set<ItemPair> existingCookingPairs) {
         List<RawBlockCandidate> candidates = new ArrayList<>();
 
@@ -423,12 +319,6 @@ public class RecipeOverrides {
                 .anyMatch(tag -> item.builtInRegistryHolder().is(tag));
     }
 
-    /**
-     * Builds the "<namespace>_raw_<metal>_block" blasting recipe id (namespaced by the source
-     * mod up front, e.g. createextrarecipes:create_raw_zinc_block) rather than a bare
-     * "raw_<metal>_block" id, so two mods that happen to add a metal of the same name never
-     * collide on the generated recipe's id.
-     */
     private static RecipeHolder<BlastingRecipe> buildRawBlockBlastingRecipe(RawBlockCandidate candidate) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(OVERRIDE_NAMESPACE,
                 candidate.rawBlockId().getNamespace() + "_" + candidate.rawBlockId().getPath());
@@ -447,13 +337,6 @@ public class RecipeOverrides {
     private record ItemPair(Item ingredient, Item result) {
     }
 
-    /**
-     * Indexes every currently-loaded minecraft:smelting/minecraft:blasting recipe by its
-     * (single-item ingredient, result item) pair, so findRawBlockToMetalBlockCandidates can skip
-     * generating a duplicate when a mod already ships its own raw-block-to-block recipe.
-     * Recipes with non-single-item ingredients (tags, multiple items) are ignored here - they
-     * can never exactly match a candidate's single concrete ingredient item anyway.
-     */
     private static Set<ItemPair> indexExistingCookingPairs(RecipeManager recipeManager, HolderLookup.Provider registries) {
         Set<ItemPair> pairs = new HashSet<>();
         for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
@@ -478,20 +361,6 @@ public class RecipeOverrides {
     private static final ResourceLocation FILLING_RECIPE_TYPE_ID = ResourceLocation.fromNamespaceAndPath("create", "filling");
     private static final int COPPER_OXIDATION_WATER_AMOUNT = 250;
 
-    /**
-     * Scans NeoForge's OXIDIZABLES data map - the same registry-driven mechanism the game uses
-     * to drive natural weathering and axe scraping, which any mod can add entries to - for
-     * every (block, next block) pair (read here via DataMapHooks.INVERSE_OXIDIZABLES_DATAMAP,
-     * which already merges the data map with vanilla's legacy static map as a fallback), and
-     * generates a create:filling recipe (250mB water) turning one stage's item into the next's.
-     * No per-mod/per-family list to maintain: a new mod's copper block registered into this
-     * data map is covered automatically, and the vanilla quirks that don't follow simple name
-     * patterns (e.g. copper_block -> exposed_copper) are already resolved correctly because
-     * they come from the game's own registered mapping rather than a name guess.
-     * Blocks with no BlockItem (asItem() == AIR) are skipped, as are pairs that already have a
-     * create:filling recipe (existingFillingPairs), so a mod shipping its own recipe is never
-     * duplicated.
-     */
     private static List<RecipeHolder<?>> findCopperOxidationCandidates(
             HolderLookup.Provider registries, Set<ItemPair> existingFillingPairs) {
         List<RecipeHolder<?>> candidates = new ArrayList<>();
@@ -513,7 +382,7 @@ public class RecipeOverrides {
             ResourceLocation recipeId = ResourceLocation.fromNamespaceAndPath(OVERRIDE_NAMESPACE,
                     "copper_oxidation/" + fromId.getNamespace() + "_" + fromId.getPath());
 
-            JsonObject json = buildFillingRecipeJson(fromId, toId);
+            JsonObject json = buildFillingRecipeJson(fromId, "minecraft:water", COPPER_OXIDATION_WATER_AMOUNT, toId);
             try {
                 Recipe<?> recipe = Recipe.CODEC.parse(ops, json).getOrThrow(IllegalStateException::new);
                 candidates.add(new RecipeHolder<>(recipeId, recipe));
@@ -525,7 +394,7 @@ public class RecipeOverrides {
         return candidates;
     }
 
-    private static JsonObject buildFillingRecipeJson(ResourceLocation ingredientItemId, ResourceLocation resultItemId) {
+    private static JsonObject buildFillingRecipeJson(ResourceLocation ingredientItemId, String fluidId, int fluidAmount, ResourceLocation resultItemId) {
         JsonObject json = new JsonObject();
         json.addProperty("type", "create:filling");
 
@@ -536,8 +405,8 @@ public class RecipeOverrides {
 
         JsonObject fluidIngredient = new JsonObject();
         fluidIngredient.addProperty("type", "neoforge:single");
-        fluidIngredient.addProperty("amount", COPPER_OXIDATION_WATER_AMOUNT);
-        fluidIngredient.addProperty("fluid", "minecraft:water");
+        fluidIngredient.addProperty("amount", fluidAmount);
+        fluidIngredient.addProperty("fluid", fluidId);
         ingredients.add(fluidIngredient);
 
         json.add("ingredients", ingredients);
@@ -551,13 +420,6 @@ public class RecipeOverrides {
         return json;
     }
 
-    /**
-     * Indexes every currently-loaded create:filling recipe by its (single-item ingredient,
-     * result item) pair, so findCopperOxidationCandidates can skip generating a duplicate when
-     * a mod already ships its own filling recipe for that pair. Identified by recipe type id
-     * rather than an instanceof check, so this never needs a compile-time dependency on
-     * Create's internal recipe class.
-     */
     private static Set<ItemPair> indexExistingFillingPairs(RecipeManager recipeManager, HolderLookup.Provider registries) {
         Set<ItemPair> pairs = new HashSet<>();
         for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
@@ -582,12 +444,66 @@ public class RecipeOverrides {
         return pairs;
     }
 
+    // --- Mechanism 6: dynamic mechanical spawn egg filling recipe generation ---------------
+
+    private static final String MECHANICAL_SPAWNER_MODID = "create_mechanical_spawner";
+    private static final int SPAWN_EGG_FLUID_AMOUNT = 250;
+
+    private static final List<String> MECHANICAL_SPAWNER_ENTITIES = List.of(
+            "bat", "bee", "blaze", "chicken", "cow", "creeper", "drowned", "enderman", "evoker",
+            "fox", "ghast", "horse", "magma_cube", "panda", "parrot", "pig", "piglin", "rabbit",
+            "skeleton", "slime", "spider", "villager", "witch", "wither_skeleton", "wither", "wolf", "zombie"
+    );
+
+    private static List<RecipeHolder<?>> findMechanicalSpawnEggCandidates(
+            HolderLookup.Provider registries, Set<ItemPair> existingFillingPairs) {
+        if (!ModList.get().isLoaded(MECHANICAL_SPAWNER_MODID)) {
+            return List.of();
+        }
+
+        List<RecipeHolder<?>> candidates = new ArrayList<>();
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries);
+
+        Item egg = Items.EGG;
+        for (String entity : MECHANICAL_SPAWNER_ENTITIES) {
+            ResourceLocation spawnEggId = ResourceLocation.withDefaultNamespace(entity + "_spawn_egg");
+            Item spawnEggItem = BuiltInRegistries.ITEM.getOptional(spawnEggId).orElse(null);
+            if (spawnEggItem == null) {
+                continue; // no vanilla spawn egg for this entity in the current registry - skip silently
+            }
+            if (existingFillingPairs.contains(new ItemPair(egg, spawnEggItem))) {
+                continue;
+            }
+
+            ResourceLocation recipeId = ResourceLocation.fromNamespaceAndPath(OVERRIDE_NAMESPACE,
+                    "mechanical_spawn_egg/" + entity);
+            String fluidId = MECHANICAL_SPAWNER_MODID + ":spawn_fluid_" + entity;
+
+            JsonObject json = buildFillingRecipeJson(
+                    ResourceLocation.withDefaultNamespace("egg"), fluidId, SPAWN_EGG_FLUID_AMOUNT, spawnEggId);
+            try {
+                Recipe<?> recipe = Recipe.CODEC.parse(ops, json).getOrThrow(IllegalStateException::new);
+                candidates.add(new RecipeHolder<>(recipeId, recipe));
+            } catch (RuntimeException e) {
+                Create_extra_recipes.LOGGER.error("Failed to build mechanical spawn egg filling recipe for {}", entity, e);
+            }
+        }
+
+        return candidates;
+    }
+
     // --- Merge & apply ---------------------------------------------------------------------
 
     private static void applyOverrides(RecipeManager recipeManager, HolderLookup.Provider registries, List<RecipeHolder<?>> staticOverrides) {
         List<RecipeHolder<?>> merged = new ArrayList<>();
         int nerfedCount = 0;
         int buffedCount = 0;
+
+        boolean nerfEnabled = Config.ENABLE_SMITHING_TEMPLATE_NERF.get();
+        boolean woodBuffEnabled = Config.ENABLE_WOOD_BUFF.get();
+        boolean rawOreBlastingEnabled = Config.ENABLE_RAW_ORE_BLASTING.get();
+        boolean copperOxidationEnabled = Config.ENABLE_COPPER_OXIDATION_FILLING.get();
+        boolean mechanicalSpawnEggEnabled = Config.ENABLE_MECHANICAL_SPAWN_EGG.get();
 
         Set<ItemPair> existingCookingPairs = indexExistingCookingPairs(recipeManager, registries);
 
@@ -598,7 +514,7 @@ public class RecipeOverrides {
 
             if (holder.value() instanceof ShapedRecipe shaped) {
                 ItemStack result = shaped.getResultItem(registries);
-                if (!result.isEmpty() && isTrimDuplicationRecipe(shaped, result)) {
+                if (nerfEnabled && !result.isEmpty() && isTrimDuplicationRecipe(shaped, result)) {
                     Optional<ShapedRecipe> nerfed = nerf(holder.id(), shaped, result);
                     if (nerfed.isPresent()) {
                         merged.add(new RecipeHolder<>(holder.id(), nerfed.get()));
@@ -607,7 +523,7 @@ public class RecipeOverrides {
                     }
                     // skip case already logged a warning in nerf(); fall through and keep original
                 }
-                if (!result.isEmpty() && isLogToWoodRecipe(shaped, result)) {
+                if (woodBuffEnabled && !result.isEmpty() && isLogToWoodRecipe(shaped, result)) {
                     merged.add(new RecipeHolder<>(holder.id(), buffWoodCount(shaped, result)));
                     buffedCount++;
                     continue;
@@ -619,7 +535,9 @@ public class RecipeOverrides {
 
         merged.addAll(staticOverrides);
 
-        List<RawBlockCandidate> rawBlockCandidates = findRawBlockToMetalBlockCandidates(existingCookingPairs);
+        List<RawBlockCandidate> rawBlockCandidates = rawOreBlastingEnabled
+                ? findRawBlockToMetalBlockCandidates(existingCookingPairs)
+                : List.of();
         for (RawBlockCandidate candidate : rawBlockCandidates) {
             merged.add(buildRawBlockBlastingRecipe(candidate));
             Create_extra_recipes.LOGGER.info(
@@ -627,22 +545,39 @@ public class RecipeOverrides {
         }
 
         Set<ItemPair> existingFillingPairs = indexExistingFillingPairs(recipeManager, registries);
-        List<RecipeHolder<?>> copperOxidationCandidates = findCopperOxidationCandidates(registries, existingFillingPairs);
+
+        List<RecipeHolder<?>> copperOxidationCandidates = copperOxidationEnabled
+                ? findCopperOxidationCandidates(registries, existingFillingPairs)
+                : List.of();
         for (RecipeHolder<?> candidate : copperOxidationCandidates) {
             merged.add(candidate);
             Create_extra_recipes.LOGGER.info("Generated copper oxidation filling recipe: {}", candidate.id());
         }
 
-        if (nerfedCount == 0 && buffedCount == 0 && staticOverrides.isEmpty()
-                && rawBlockCandidates.isEmpty() && copperOxidationCandidates.isEmpty()) {
+        List<RecipeHolder<?>> mechanicalSpawnEggCandidates = mechanicalSpawnEggEnabled
+                ? findMechanicalSpawnEggCandidates(registries, existingFillingPairs)
+                : List.of();
+        for (RecipeHolder<?> candidate : mechanicalSpawnEggCandidates) {
+            merged.add(candidate);
+            Create_extra_recipes.LOGGER.info("Generated mechanical spawn egg filling recipe: {}", candidate.id());
+        }
+
+        if (nerfedCount == 0 && buffedCount == 0 && staticOverrides.isEmpty() && rawBlockCandidates.isEmpty()
+                && copperOxidationCandidates.isEmpty() && mechanicalSpawnEggCandidates.isEmpty()) {
             return;
         }
 
         recipeManager.replaceRecipes(merged);
         Create_extra_recipes.LOGGER.info(
-                "create_extra_recipes: applied {} static recipe override(s), {} dynamically-detected trim template nerf(s), "
-                        + "{} dynamically-detected log-to-wood buff(s), {} dynamically-generated raw ore block blasting recipe(s), "
-                        + "and {} dynamically-generated copper oxidation filling recipe(s)",
-                staticOverrides.size(), nerfedCount, buffedCount, rawBlockCandidates.size(), copperOxidationCandidates.size());
+                "create_extra_recipes: applied {} static recipe override(s), {} dynamically-detected trim template nerf(s) "
+                        + "(enabled={}), {} dynamically-detected log-to-wood buff(s) (enabled={}), {} dynamically-generated "
+                        + "raw ore block blasting recipe(s) (enabled={}), {} dynamically-generated copper oxidation filling "
+                        + "recipe(s) (enabled={}), and {} dynamically-generated mechanical spawn egg filling recipe(s) (enabled={})",
+                staticOverrides.size(),
+                nerfedCount, nerfEnabled,
+                buffedCount, woodBuffEnabled,
+                rawBlockCandidates.size(), rawOreBlastingEnabled,
+                copperOxidationCandidates.size(), copperOxidationEnabled,
+                mechanicalSpawnEggCandidates.size(), mechanicalSpawnEggEnabled);
     }
 }

@@ -12,7 +12,5 @@ public class DataGenerators {
     public static void gatherData(GatherDataEvent event) {
         event.getGenerator().addProvider(true,
                 new DyeableComponentsRecipeProvider(event.getGenerator().getPackOutput()));
-        event.getGenerator().addProvider(true,
-                new MechanicalSpawnerEggRecipeProvider(event.getGenerator().getPackOutput()));
     }
 }

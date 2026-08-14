@@ -1,0 +1,12 @@
+{
+  "config.create_extra_recipes.title": "Create: Extra Recipes",
+  "config.create_extra_recipes.category.vanillaRecipes": "Vanilla Recipes",
+  "config.create_extra_recipes.category.createRecipes": "Create Recipes",
+  "config.create_extra_recipes.category.otherModsCompat": "Other Mods Compatibility",
+  "config.create_extra_recipes.enableSmithingTemplateNerf": "Easier Smithing Templates",
+  "config.create_extra_recipes.enableWoodBuff": "Easier Woods",
+  "config.create_extra_recipes.enableRawOreBlasting": "Raw Ore Block Blasting",
+  "config.create_extra_recipes.enableCopperOxidationFilling": "Copper Oxidation Filling",
+  "config.create_extra_recipes.enableMechanicalSpawnEgg": "Mechanical Spawn Eggs",
+  "config.create_extra_recipes.missingDependency": "Requires %s to be installed to have any effect"
+}
