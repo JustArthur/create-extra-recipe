@@ -2,7 +2,7 @@
   "type": "create:splashing",
   "ingredients": [
     {
-      "tag": "c:shulker_boxes"
+      "tag": "createextrarecipes:shulker_boxes"
     }
   ],
   "results": [
