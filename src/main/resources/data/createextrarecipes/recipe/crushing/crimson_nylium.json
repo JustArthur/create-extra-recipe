@@ -1,0 +1,23 @@
+{
+  "type": "create:crushing",
+  "ingredients": [{"item": "minecraft:crimson_nylium"}],
+  "processing_time": 250,
+  "results": [
+    {
+      "count": 2,
+      "id": "create:cinder_flour"
+    },
+    {
+      "chance": 0.75,
+      "id": "minecraft:crimson_fungus"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:crimson_roots"
+    },
+    {
+      "chance": 0.01,
+      "id": "minecraft:gold_ingot"
+    }
+  ]
+}

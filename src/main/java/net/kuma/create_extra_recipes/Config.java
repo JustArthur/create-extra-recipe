@@ -26,21 +26,21 @@ public class Config {
                 .define("enableWoodBuff", true);
 
         ENABLE_RAW_ORE_BLASTING = builder
-                .comment("Generate blasting recipes for raw ore blocks that don't already have one.")
+                .comment("Generate blasting recipes for raw ore blocks.")
                 .define("enableRawOreBlasting", true);
 
         builder.pop();
         builder.push("createRecipes");
 
         ENABLE_COPPER_OXIDATION_FILLING = builder
-                .comment("Generate Create filling recipes for copper (and copper-like) oxidation stages.")
+                .comment("Generate Create filling recipes for copper oxidation stages.")
                 .define("enableCopperOxidationFilling", true);
 
         builder.pop();
         builder.push("otherModsCompat");
 
         ENABLE_MECHANICAL_SPAWN_EGG = builder
-                .comment("Generate Create filling recipes turning eggs into mob spawn eggs using Create: Mechanical "
+                .comment("Generate Create filling recipes turning eggs into mob spawn eggs using Create Mechanical "
                         + "Spawner's fluids. Has no effect unless that mod is also installed.")
                 .define("enableMechanicalSpawnEgg", true);
 
