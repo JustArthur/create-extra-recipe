@@ -1,0 +1,6 @@
+{
+  "values": [
+    "#create_extra_recipes:armors/diamond_armor",
+    "#create_extra_recipes:tools/diamond_tools"
+  ]
+}

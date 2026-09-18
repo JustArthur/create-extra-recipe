@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class DyeableComponentsRecipeProvider implements DataProvider {
 
-    private static final String NAMESPACE = "createextrarecipes";
+    private static final String NAMESPACE = "create_extra_recipes";
     private static final String BASE_PATH = "recipe/dyeable_components/compat";
 
     private record Category(String folder, boolean ingredientIsTag, String ingredient, String resultNamespace,

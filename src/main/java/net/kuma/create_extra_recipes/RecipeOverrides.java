@@ -27,6 +27,7 @@ import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import net.minecraft.world.level.block.Block;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.DataMapHooks;
@@ -61,7 +62,7 @@ public class RecipeOverrides {
     private volatile PendingApply pending;
 
     private record PendingApply(RecipeManager recipeManager, HolderLookup.Provider registries,
-                                 List<RecipeHolder<?>> staticOverrides) {
+                                List<RecipeHolder<?>> staticOverrides) {
     }
 
     @SubscribeEvent
@@ -77,7 +78,7 @@ public class RecipeOverrides {
         );
     }
 
-    @SubscribeEvent
+    @SubscribeEvent(priority = EventPriority.LOWEST)
     public void onTagsUpdated(TagsUpdatedEvent event) {
         if (event.getUpdateCause() != TagsUpdatedEvent.UpdateCause.SERVER_DATA_LOAD) {
             return;
@@ -234,7 +235,7 @@ public class RecipeOverrides {
             return false;
         }
 
-        Ingredient first = ingredients.get(0);
+        Ingredient first = ingredients.getFirst();
         if (first.isEmpty()) {
             return false;
         }
@@ -343,7 +344,7 @@ public class RecipeOverrides {
             if (!(holder.value() instanceof AbstractCookingRecipe cooking)) {
                 continue;
             }
-            ItemStack[] items = cooking.getIngredients().get(0).getItems();
+            ItemStack[] items = cooking.getIngredients().getFirst().getItems();
             if (items.length != 1) {
                 continue;
             }
@@ -367,7 +368,6 @@ public class RecipeOverrides {
         RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries);
 
         for (Map.Entry<Block, Block> entry : DataMapHooks.INVERSE_OXIDIZABLES_DATAMAP.entrySet()) {
-            // entry is (afterStage -> beforeStage): the recipe goes the other way, before -> after
             Item fromItem = entry.getValue().asItem();
             Item toItem = entry.getKey().asItem();
             if (fromItem == Items.AIR || toItem == Items.AIR) {
@@ -568,16 +568,5 @@ public class RecipeOverrides {
         }
 
         recipeManager.replaceRecipes(merged);
-        Create_extra_recipes.LOGGER.info(
-                "create_extra_recipes: applied {} static recipe override(s), {} dynamically-detected trim template nerf(s) "
-                        + "(enabled={}), {} dynamically-detected log-to-wood buff(s) (enabled={}), {} dynamically-generated "
-                        + "raw ore block blasting recipe(s) (enabled={}), {} dynamically-generated copper oxidation filling "
-                        + "recipe(s) (enabled={}), and {} dynamically-generated mechanical spawn egg filling recipe(s) (enabled={})",
-                staticOverrides.size(),
-                nerfedCount, nerfEnabled,
-                buffedCount, woodBuffEnabled,
-                rawBlockCandidates.size(), rawOreBlastingEnabled,
-                copperOxidationCandidates.size(), copperOxidationEnabled,
-                mechanicalSpawnEggCandidates.size(), mechanicalSpawnEggEnabled);
     }
 }

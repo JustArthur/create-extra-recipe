@@ -1,0 +1,6 @@
+{
+  "values": [
+    "#create_extra_recipes:armors/iron_armor",
+    "#create_extra_recipes:tools/iron_tools"
+  ]
+}
