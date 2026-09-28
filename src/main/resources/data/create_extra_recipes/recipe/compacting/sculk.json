@@ -1,13 +1,12 @@
 {
   "type": "create:compacting",
   "ingredients": [
-    {"item": "minecraft:bone_block"},
-    {"item": "minecraft:echo_shard"},
-    {"item": "minecraft:echo_shard"},
-    {"item": "minecraft:echo_shard"},
+    {"item": "minecraft:deepslate"},
+    {"item": "create:experience_nugget"},
+    {"item": "create:experience_nugget"},
     {
       "type": "neoforge:components",
-      "amount": 100,
+      "amount": 250,
       "components": {
         "create:potion_fluid_bottle_type": "regular",
         "minecraft:potion_contents": {
@@ -19,7 +18,7 @@
   ],
   "results": [
     {
-      "id": "minecraft:sculk_catalyst"
+      "id": "minecraft:sculk"
     }
   ]
 }
