@@ -367,9 +367,15 @@ public class RecipeOverrides {
         List<RecipeHolder<?>> candidates = new ArrayList<>();
         RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries);
 
-        for (Map.Entry<Block, Block> entry : DataMapHooks.INVERSE_OXIDIZABLES_DATAMAP.entrySet()) {
-            Item fromItem = entry.getValue().asItem();
-            Item toItem = entry.getKey().asItem();
+        // Walk every block through getNextOxidizedStage instead of reading the datamap directly: mods built on Platform
+        // (e.g. Vanilla Backport) keep their pairs in their own map and only hook this method, so the raw datamap misses them.
+        for (Block fromBlock : BuiltInRegistries.BLOCK) {
+            Block toBlock = DataMapHooks.getNextOxidizedStage(fromBlock);
+            if (toBlock == null) {
+                continue;
+            }
+            Item fromItem = fromBlock.asItem();
+            Item toItem = toBlock.asItem();
             if (fromItem == Items.AIR || toItem == Items.AIR) {
                 continue;
             }
@@ -444,6 +450,107 @@ public class RecipeOverrides {
         return pairs;
     }
 
+    // --- Mechanism 7: dynamic copper waxing / unwaxing deploying recipe generation ---------
+
+    private static final ResourceLocation DEPLOYING_RECIPE_TYPE_ID = ResourceLocation.fromNamespaceAndPath("create", "deploying");
+    private static final String AXES_TAG_ID = "minecraft:axes";
+
+    private static Set<ItemPair> indexExistingDeployingPairs(RecipeManager recipeManager, HolderLookup.Provider registries) {
+        Set<ItemPair> pairs = new HashSet<>();
+        for (RecipeHolder<?> holder : recipeManager.getRecipes()) {
+            Recipe<?> recipe = holder.value();
+            if (!DEPLOYING_RECIPE_TYPE_ID.equals(BuiltInRegistries.RECIPE_TYPE.getKey(recipe.getType()))) {
+                continue;
+            }
+            NonNullList<Ingredient> ingredients = recipe.getIngredients();
+            if (ingredients.isEmpty()) {
+                continue;
+            }
+            ItemStack[] items = ingredients.get(0).getItems();
+            if (items.length != 1) {
+                continue;
+            }
+            ItemStack result = recipe.getResultItem(registries);
+            if (result.isEmpty()) {
+                continue;
+            }
+            pairs.add(new ItemPair(items[0].getItem(), result.getItem()));
+        }
+        return pairs;
+    }
+
+    private static List<RecipeHolder<?>> findCopperWaxingCandidates(
+            HolderLookup.Provider registries, Set<ItemPair> existingDeployingPairs) {
+        List<RecipeHolder<?>> candidates = new ArrayList<>();
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries);
+
+        // Same reasoning as the oxidation lookup: go through DataMapHooks so Platform-based mods are seen too.
+        for (Block unwaxedBlock : BuiltInRegistries.BLOCK) {
+            Block waxedBlock = DataMapHooks.getBlockWaxed(unwaxedBlock);
+            if (waxedBlock == null) {
+                continue;
+            }
+            Item unwaxedItem = unwaxedBlock.asItem();
+            Item waxedItem = waxedBlock.asItem();
+            if (unwaxedItem == Items.AIR || waxedItem == Items.AIR) {
+                continue;
+            }
+
+            ResourceLocation unwaxedId = BuiltInRegistries.ITEM.getKey(unwaxedItem);
+            ResourceLocation waxedId = BuiltInRegistries.ITEM.getKey(waxedItem);
+
+            if (!existingDeployingPairs.contains(new ItemPair(unwaxedItem, waxedItem))) {
+                addDeployingCandidate(candidates, ops,
+                        "copper_waxing/" + unwaxedId.getNamespace() + "_" + unwaxedId.getPath(),
+                        unwaxedId, "item", BuiltInRegistries.ITEM.getKey(Items.HONEYCOMB_BLOCK).toString(), waxedId);
+            }
+            if (!existingDeployingPairs.contains(new ItemPair(waxedItem, unwaxedItem))) {
+                addDeployingCandidate(candidates, ops,
+                        "copper_unwaxing/" + waxedId.getNamespace() + "_" + waxedId.getPath(),
+                        waxedId, "tag", AXES_TAG_ID, unwaxedId);
+            }
+        }
+
+        return candidates;
+    }
+
+    private static void addDeployingCandidate(List<RecipeHolder<?>> candidates, RegistryOps<JsonElement> ops, String path,
+                                              ResourceLocation inputId, String heldKey, String heldValue, ResourceLocation resultId) {
+        ResourceLocation recipeId = ResourceLocation.fromNamespaceAndPath(OVERRIDE_NAMESPACE, path);
+        JsonObject json = buildDeployingRecipeJson(inputId, heldKey, heldValue, resultId);
+        try {
+            Recipe<?> recipe = Recipe.CODEC.parse(ops, json).getOrThrow(IllegalStateException::new);
+            candidates.add(new RecipeHolder<>(recipeId, recipe));
+        } catch (RuntimeException e) {
+            Create_extra_recipes.LOGGER.error("Failed to build copper waxing deploying recipe {} -> {}", inputId, resultId, e);
+        }
+    }
+
+    private static JsonObject buildDeployingRecipeJson(ResourceLocation inputItemId, String heldKey, String heldValue, ResourceLocation resultItemId) {
+        JsonObject json = new JsonObject();
+        json.addProperty("type", "create:deploying");
+
+        JsonArray ingredients = new JsonArray();
+        JsonObject inputIngredient = new JsonObject();
+        inputIngredient.addProperty("item", inputItemId.toString());
+        ingredients.add(inputIngredient);
+
+        JsonObject heldIngredient = new JsonObject();
+        heldIngredient.addProperty(heldKey, heldValue);
+        ingredients.add(heldIngredient);
+
+        json.add("ingredients", ingredients);
+        json.addProperty("keep_held_item", true);
+
+        JsonArray results = new JsonArray();
+        JsonObject result = new JsonObject();
+        result.addProperty("id", resultItemId.toString());
+        results.add(result);
+        json.add("results", results);
+
+        return json;
+    }
+
     // --- Mechanism 6: dynamic mechanical spawn egg filling recipe generation ---------------
 
     private static final String MECHANICAL_SPAWNER_MODID = "create_mechanical_spawner";
@@ -503,6 +610,7 @@ public class RecipeOverrides {
         boolean woodBuffEnabled = Config.ENABLE_WOOD_BUFF.get();
         boolean rawOreBlastingEnabled = Config.ENABLE_RAW_ORE_BLASTING.get();
         boolean copperOxidationEnabled = Config.ENABLE_COPPER_OXIDATION_FILLING.get();
+        boolean copperWaxingEnabled = Config.ENABLE_COPPER_WAXING_DEPLOYING.get();
         boolean mechanicalSpawnEggEnabled = Config.ENABLE_MECHANICAL_SPAWN_EGG.get();
 
         Set<ItemPair> existingCookingPairs = indexExistingCookingPairs(recipeManager, registries);
@@ -554,6 +662,14 @@ public class RecipeOverrides {
             Create_extra_recipes.LOGGER.info("Generated copper oxidation filling recipe: {}", candidate.id());
         }
 
+        List<RecipeHolder<?>> copperWaxingCandidates = copperWaxingEnabled
+                ? findCopperWaxingCandidates(registries, indexExistingDeployingPairs(recipeManager, registries))
+                : List.of();
+        for (RecipeHolder<?> candidate : copperWaxingCandidates) {
+            merged.add(candidate);
+            Create_extra_recipes.LOGGER.info("Generated copper waxing deploying recipe: {}", candidate.id());
+        }
+
         List<RecipeHolder<?>> mechanicalSpawnEggCandidates = mechanicalSpawnEggEnabled
                 ? findMechanicalSpawnEggCandidates(registries, existingFillingPairs)
                 : List.of();
@@ -563,7 +679,7 @@ public class RecipeOverrides {
         }
 
         if (nerfedCount == 0 && buffedCount == 0 && staticOverrides.isEmpty() && rawBlockCandidates.isEmpty()
-                && copperOxidationCandidates.isEmpty() && mechanicalSpawnEggCandidates.isEmpty()) {
+                && copperOxidationCandidates.isEmpty() && copperWaxingCandidates.isEmpty() && mechanicalSpawnEggCandidates.isEmpty()) {
             return;
         }
 

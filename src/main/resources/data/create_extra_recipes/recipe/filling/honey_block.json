@@ -1,0 +1,18 @@
+{
+  "type": "create:filling",
+  "ingredients": [
+    {
+      "item": "minecraft:slime_block"
+    },
+    {
+      "type": "neoforge:single",
+      "amount": 1000,
+      "fluid": "create:honey"
+    }
+  ],
+  "results": [
+    {
+      "id": "minecraft:honey_block"
+    }
+  ]
+}

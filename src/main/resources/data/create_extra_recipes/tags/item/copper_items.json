@@ -1,0 +1,6 @@
+{
+  "values": [
+    "#create_extra_recipes:armors/compat/copper_armor",
+    "#create_extra_recipes:tools/compat/copper_tools"
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:crushing",
+  "ingredients": [{"tag": "create_extra_recipes:tools/compat/copper_tools"}],
+  "processing_time": 450,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:copper_ingot"
+    },
+    {
+      "chance": 0.50,
+      "id": "minecraft:stick"
+    },
+    {
+      "count": 3,
+      "chance": 0.25,
+      "id": "create:copper_nugget"
+    },
+    {
+      "chance": 0.1,
+      "id": "create:copper_ingot"
+    }
+  ]
+}

@@ -55,6 +55,13 @@ final class ClothConfigScreen {
                 .setSaveConsumer(Config.ENABLE_COPPER_OXIDATION_FILLING::set)
                 .build());
 
+        createCategory.addEntry(entryBuilder
+                .startBooleanToggle(Component.translatable("config." + Create_extra_recipes.MODID + ".enableCopperWaxingDeploying"),
+                        Config.ENABLE_COPPER_WAXING_DEPLOYING.get())
+                .setDefaultValue(true)
+                .setSaveConsumer(Config.ENABLE_COPPER_WAXING_DEPLOYING::set)
+                .build());
+
         ConfigCategory otherModsCategory = builder.getOrCreateCategory(
                 Component.translatable("config." + Create_extra_recipes.MODID + ".category.otherModsCompat"));
 

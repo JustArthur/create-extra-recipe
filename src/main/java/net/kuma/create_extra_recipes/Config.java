@@ -10,6 +10,7 @@ public class Config {
     public static final ModConfigSpec.BooleanValue ENABLE_WOOD_BUFF;
     public static final ModConfigSpec.BooleanValue ENABLE_RAW_ORE_BLASTING;
     public static final ModConfigSpec.BooleanValue ENABLE_COPPER_OXIDATION_FILLING;
+    public static final ModConfigSpec.BooleanValue ENABLE_COPPER_WAXING_DEPLOYING;
     public static final ModConfigSpec.BooleanValue ENABLE_MECHANICAL_SPAWN_EGG;
 
     static {
@@ -35,6 +36,11 @@ public class Config {
         ENABLE_COPPER_OXIDATION_FILLING = builder
                 .comment("Generate Create filling recipes for copper oxidation stages.")
                 .define("enableCopperOxidationFilling", true);
+
+        ENABLE_COPPER_WAXING_DEPLOYING = builder
+                .comment("Generate Create deploying recipes for waxing (honeycomb block) and unwaxing (axe) copper blocks "
+                        + "that have none, such as the ones added by other mods.")
+                .define("enableCopperWaxingDeploying", true);
 
         builder.pop();
         builder.push("otherModsCompat");

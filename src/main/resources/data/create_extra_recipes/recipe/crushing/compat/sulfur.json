@@ -1,0 +1,21 @@
+{
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "vanillabackport"
+    }
+  ],
+  "type": "create:crushing",
+  "ingredients": [{"item": "minecraft:sulfur"}],
+  "processing_time": 250,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:gunpowder"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:gunpowder"
+    }
+  ]
+}

@@ -7,6 +7,7 @@
   "config.create_extra_recipes.enableWoodBuff": "Easier Woods",
   "config.create_extra_recipes.enableRawOreBlasting": "Raw Ore Block Blasting",
   "config.create_extra_recipes.enableCopperOxidationFilling": "Copper Oxidation Filling",
+  "config.create_extra_recipes.enableCopperWaxingDeploying": "Copper Waxing Deploying",
   "config.create_extra_recipes.enableMechanicalSpawnEgg": "Mechanical Spawn Eggs",
   "config.create_extra_recipes.missingDependency": "Requires %s to be installed to have any effect"
 }
