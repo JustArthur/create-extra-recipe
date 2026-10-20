@@ -6,7 +6,7 @@
     }
   ],
   "type": "create:crushing",
-  "ingredient": "minecraft:wolf_armor",
+  "ingredients": [{"item": "minecraft:wolf_armor"}],
   "processing_time": 250,
   "results": [
     {
